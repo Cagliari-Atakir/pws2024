@@ -1,6 +1,14 @@
 const uuid = require('uuid')
 const mongoose = require('mongoose')
 
+const TaskSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    startDate: { type: Date, required: true, transform: v => v.toISOString().substr(0, 10) },
+    endDate: { type: Date, required: false, transform: v => v ? v.toISOString().substr(0, 10) : v },
+    workers: { type: [String], required: false, default: [] }
+}, { _id: false });
+
+
 const project = module.exports = {
     model: null,
     endpoint: '/api/project',
@@ -16,7 +24,8 @@ const project = module.exports = {
             },
             startDate: { type: Date, required: true, transform: v => v.toISOString().substr(0, 10) },
             endDate: { type: Date, required: false, transform: v => v.toISOString().substr(0, 10) },
-            contractor_ids: { type: [ String ], required: false, default: [] }
+            contractor_ids: { type: [ String ], required: false, default: [] },
+            tasks: { type: [TaskSchema], required: false, default: [] }
         }, {
             versionKey: false,
             additionalProperties: false

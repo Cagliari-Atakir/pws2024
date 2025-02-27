@@ -1,14 +1,17 @@
 <script>
+    import TasksModal from './TasksModal.vue'
 
     const projectEndpoint = '/api/project'
     const personEndpoint = '/api/person'
 
     export default {
+        components: { TasksModal },
         data() {
             return {
                 personItems: [],
                 isValid: false,
                 input: {},
+                showTasksModal: false,
                 rules: {
                     startsWithLetter: value => {
                         const pattern = /^\p{L}/u
@@ -79,6 +82,13 @@
                 })
               })
            },
+           openTaskModal() {
+                this.showTasksModal = true
+           },
+           onTaskClose(updatedTasks) {
+                this.input.tasks = updatedTasks
+                this.showTasksModal = false
+           },
            setData(data) {
               this.input = {}
               Object.assign(this.input, data)
@@ -89,10 +99,15 @@
            },
            close() {
                 this.$emit('close')
-           }  
+           }
         },
         mounted() {
             Object.assign(this.input, this.project)
+
+            if (!this.input.tasks) {
+                this.input.tasks = []
+                }
+
             fetch(personEndpoint + '?' + 
                     new URLSearchParams({ sort: 'lastName', order: 1 }).toString())
                 .then(res => res.json().then(facet => {
@@ -116,10 +131,21 @@
                 </v-text-field>
                 <v-text-field type="date" variant="outlined" label="End date" v-model="input.endDate" :rules="[ rules.validDate ]">
                 </v-text-field>
+                <v-text-field variant="outlined" label="Name" v-model="input.name" :rules="[ rules.startsWithLetter ]">
+                </v-text-field>
+                <v-text-field type="date" variant="outlined" label="Start date" v-model="input.startDate" :rules="[ rules.validDate ]">
+                </v-text-field>
+                <v-text-field type="date" variant="outlined" label="End date" v-model="input.endDate" :rules="[ rules.validDate ]">
+                </v-text-field>
                 <v-autocomplete variant="outlined" v-model="input.contractor_ids"
                     chips label="Contractors" multiple
                     :items="personItems" :item-title="item => item.firstName + ' ' + item.lastName" item-value="_id"
                 ></v-autocomplete>
+                <v-autocomplete variant="outlined" v-model="input.contractor_ids"
+                    chips label="Contractors" multiple
+                    :items="personItems" :item-title="item => item.firstName + ' ' + item.lastName" item-value="_id"
+                ></v-autocomplete>
+                <v-btn variant="elevated" @click="openTasksModal">Tasks</v-btn>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -129,6 +155,13 @@
                 <v-btn color="error" variant="elevated" @click="remove" v-if="input._id">Delete</v-btn>
                 <v-btn variant="elevated" @click="close">Close</v-btn>
             </v-card-actions>
+            <TasksModal
+            v-if="showTasksModal"
+            :initialTasks="input.tasks"
+            :persons="personItems"
+            @close="onTasksClose"
+            @cancel="showTasksModal = false"
+            />
         </v-card>
     </v-form>
 
